@@ -1,0 +1,87 @@
+#!/bin/bash
+## bak --- simple, efficient, and encrypted backups
+
+# Copyright (C) 2016 Guilherme Gondim
+
+# Author: Guilherme Gondim <https://semente.io>
+# Website: https://github.com/semente/bak
+# Keywords: backup
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+## Code:
+
+# exit on error
+set -e
+
+# debug -- read commands but do not execute them
+[ -n "$DEBUG" ] && set -vn
+
+# verbose -- tar, gpg and rsync runs verbosily and;
+VERBOSE=${VERBOSE:+"--verbose"}
+# print commands and their arguments as they are executed
+[ -n "$VERBOSE" ] && set -x
+
+# backup preferences
+SIGN=${SIGN:+"--sign"}
+SIGN_KEY=${SIGN_KEY:+"--local-user $BAK_SIGN_KEY"}
+RCPT_KEY=${RCPT_KEY:+"--recipient $BAK_RCPT_KEY"}
+MAX_FILE_SIZE=${MAX_FILE_SIZE:+"-size -${MAX_FILE_SIZE}k"}
+
+# command line arguments
+DEST=${1:?"missing destination operand (rsync syntax)"}
+
+# incremental backups are based on last modification time of this file
+LASTFILE=.bak.last
+[ -f $LASTFILE ] && BAKTYPE=incr || BAKTYPE=full
+[ $BAKTYPE = full ] && touch -t 190001010000.00 $LASTFILE
+
+# determine where the backup file is stored before sent to DEST
+BAKFILE="`mktemp -d`/`date --utc --iso-8601=s`.${BAKTYPE}.tar.gz.gpg"
+
+# setup semaphore file
+LOCKFILE=.bak.lock
+lockfile -r 0 $LOCKFILE || exit 1
+
+# activates handlers to be run when the shell receives exit signals
+trap "rm -f $LOCKFILE $BAKFILE; pkill -P $$" 0 2 3 15
+
+# Tar excludes patterns listed in .bakignore if found in the current directory
+[ -f .bakignore ] && EXCLUDE_FROM="--exclude-from .bakignore" || EXCLUDE_FROM=""
+
+# Make a list of files to backup that size is less than
+# `$MAX_FILE_SIZE' (if set) and newer than `$LASTFILE' (if present);
+# then create a PGP encrypted tar.gz archive.
+find -type f $MAX_FILE_SIZE -newer $LASTFILE -print0 |
+    tar $VERBOSE $EXCLUDE_FROM \
+        --exclude=$LASTFILE --exclude=$LOCKFILE \
+        --exclude-backups \
+        --exclude-caches \
+        --exclude-tag=.nobackup \
+        --exclude-vcs \
+        --null \
+        --files-from - \
+        -cz |
+    gpg $VERBOSE \
+        --yes \
+        --no-tty \
+        --encrypt $RCPT_KEY $SIGN $SIGN_KEY \
+        --output "$BAKFILE"
+
+# send `$BAKFILE' to DEST using rsync
+rsync $VERBOSE --chmod=0600 "$BAKFILE" "${DEST}/"
+
+# update last modification time of `$LASTFILE'
+touch -t `date +%Y%m%d%H%M.00` $LASTFILE
