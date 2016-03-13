@@ -123,7 +123,7 @@ ignore just the directory `.local` from the root of the backup source
 I had to use `./.local`. In this case, using `/home/user/.local` won't
 work.
 
-``sh
+```sh
 # my ~/.bakignore file
 *~
 */.git
@@ -132,7 +132,7 @@ work.
 ./.local
 ./.virtualenvs
 ./Downloads/Torrent
-``
+```
 
 *bak* do not respects `.bakignore` files from subdirectories, i.e., it
 just load the `./.bakignore` file.
