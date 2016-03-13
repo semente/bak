@@ -118,7 +118,7 @@ file `.bakignore` of the current directory. It will also exclude any
 directory that contains the file `.nobackup`.
 
 Check out the exclude file below, to ignore all `.git` directories I
-had to start the pattern with a wildcard "*" as in `*/.git` but to
+had to start the pattern with a wildcard "\*" as in `\*/.git` but to
 ignore just the directory `.local` from the root of the backup source
 I had to use `./.local`. In this case, using `/home/user/.local` won't
 work.
