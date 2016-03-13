@@ -1,27 +1,24 @@
 #!/bin/bash
 ## bak --- simple, efficient, and encrypted backups
-
-# Copyright (C) 2016 Guilherme Gondim
-
-# Author: Guilherme Gondim <https://semente.io>
+#
+# Copyright (C) 2016 Guilherme Gondim <https://semente.io>
+#
 # Website: https://github.com/semente/bak
-# Keywords: backup
-
+# Keywords: backup, cryptography, commandline
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-
-## Code:
+#
 
 # exit on error
 set -e
