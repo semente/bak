@@ -1,12 +1,12 @@
-# bak --- simple, efficient, and encrypted backups
+# bak -- simple, efficient, and encrypted backups
 
 The purpose of **bak** is to be a simple, secure, easy to set up, and
 use backup solution for GNU/Linux.
 
 Although not tested on BSDs, Mac OS X, cygnus and the like, it should
-work fine in any machine with *GNU coreutils, bash, rsync and GnuPG*
--- feel free to send pull requests to increase compatibility and ease
-of deploy in systems other than GNU/Linux.
+work fine in any machine with *GNU coreutils, bash, rsync* and
+*GnuPG*-feel free to send pull requests to increase compatibility and
+ease of deploy in systems other than GNU/Linux.
 
 It is also required that you have a PGP key configured **and know how
 to handle GnuPG**.
