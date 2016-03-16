@@ -139,3 +139,18 @@ SHELL=/bin/bash
 # backup files in $HOME that are newer than `.bak' and size are not larger than 1M, every 6 hours
 */6  *    *   *   *     cd $HOME && /path/to/bak -u -s1024 user@remote:bak/`hostname -s`/
 ```
+
+# Known issues
+
+- Is recommended that you do full backups (`-f`) if you have changed
+  your `.bakignore` file. *bak* won't include a removed or modified
+  pattern from this file that was changed before *lastfile* (`.bak`)
+  in the next incremental backup. A similar issue will occur when
+  using the option `-s`.
+
+- When sending backups to multiple destinations, *lastfile*'s (`.bak`)
+  last modification time won't be updated if *bak* failed for at least
+  one destination. It means that next incremental backup will have
+  duplicates files in the succeeded destination. It is not a big deal.
+
+- dry run (`-n`) option is not implemented yet
