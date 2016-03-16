@@ -30,8 +30,8 @@ computer:
 
   - Bash
   - GNU Tar and Gzip
-  - GNU coreutils (dirname, mktemp, rm, touch)
-  - GNU findutils (find)
+  - dirname, mktemp, rm, touch (GNU coreutils)
+  - find (GNU findutils)
   - GNU grep
   - rsync
   - GnuPG
