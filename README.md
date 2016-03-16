@@ -1,9 +1,9 @@
 # bak -- simple, efficient, and encrypted backups
 
 The purpose of **bak** is to be a simple, secure, easy to set up, and
-use backup solution for GNU/Linux. It is designed for personal and
-desktop backups-mainly for your laptop when roaming around-but you can
-also find it useful in other situations.
+use encrypted backup solution for GNU/Linux. It is designed for
+personal and desktop backups-mainly for your laptop when roaming
+around-but you can also find it useful in other situations.
 
 I wrote this script because I found *duplicity* and other alternatives
 for encrypted backups too complicated for my purposes.
