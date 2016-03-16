@@ -170,12 +170,13 @@ SHELL=/bin/bash
 
 # m  h    dom mon dow   command
 #
+
 # backup all files in $HOME every Sunday
 0    0    *   *   0     cd $HOME && /path/to/bak -uf -rABCD1234 user@remote:bak/`hostname -s`/
-#
+
 # backup all files in $HOME that size are not larger than 4M (4096kb), daily
 0    0    *   *   *     cd $HOME && /path/to/bak -uf -s4096 -rABCD1234 user@remote:bak/`hostname -s`/
-#
+
 # backup files in $HOME that are newer than `.bak' and size are not larger than 1M, every 6 hours
 */6  *    *   *   *     cd $HOME && /path/to/bak -u -s1024 -rABCD1234 user@remote:bak/`hostname -s`/
 ```
