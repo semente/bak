@@ -45,37 +45,39 @@ bak [OPTION]... [[USER@]HOST:]DEST...
 
 ### Description
 
-Backups current directory to one or more DEST in local or remote
+Backups current directory to one or more `DEST` in local or remote
 hosts. Backups are always encrypted and signed by GnuPG (PGP)-you must
 have a personal key configured for the user running `bak`.
 
-*Incremental backups are done by default* and it is based on the last
-modification time of the file `.bak` (*lastfile*) located in the
+**Incremental backups are done by default** and it is based on the
+last modification time of the file `.bak` (*lastfile*) located in the
 current directory. This file is automatically created and its
 modification time is updated after every successul backup. However,
 you can force a full backup by just providing the option `-f`.
 
-I also recommend you to read the source code, it is very short and
-clean.
-
 ### Usage examples
 
-*Backup current directory and exclude files bigger than 1M (1024kb):*
+**Backup current directory and exclude files bigger than 1M (1024kb):**
 
 ```sh
 $ bak -s1024 user@remote:backups/`hostname -s`
 ```
 
-If a previous backup was made (i.e. there is a `.bak` in the current
-directory) the next backup will ignore any files older than the
-*lastfile* `.bak`. You must use the option `-f` to force a full
-backup, as shown in the next example.
+If a previous backup was made before (i.e. there is a `.bak` file in
+the current directory) the next backup will ignore any files older
+than the *lastfile* `.bak`. You must use the option `-f` to force a
+full backup, as shown in the next example.
 
-*Force full backups and use a specific recipient encryption key:*
+**Force full backups and use a specific recipient encryption key:**
 
 ```sh
 $ bak -f -rABCD1234 bak /in/black
 ```
+
+If you don't have the options `default-recipient-self` and
+`default-key` configured in your `gpg.conf`, the `-r` option will
+prevent GnuPG to interactively ask you for the recipient key for
+encryption.
 
 #### Other options
 
@@ -115,7 +117,7 @@ the directory `.local` from the root of the backup source I had to use
 
 I do not have any scheduled backup in my laptop, I have a script that
 remember me from time to time to backup so I decide whenever is a good
-time for backup and what options should I use.
+time for backup and what options I should use.
 
 However, you might find interesting schedule your backups by using
 *cron*. For unattended operations, is recommended that you use the
@@ -131,13 +133,13 @@ SHELL=/bin/bash
 # m  h    dom mon dow   command
 #
 # backup all files in $HOME every Sunday
-0    0    *   *   0     cd $HOME && /path/to/bak -uf user@remote:bak/`hostname -s`/
+0    0    *   *   0     cd $HOME && /path/to/bak -uf -rABCD1234 user@remote:bak/`hostname -s`/
 #
 # backup all files in $HOME that size are not larger than 4M (4096kb), daily
-0    0    *   *   *     cd $HOME && /path/to/bak -uf -s4096 user@remote:bak/`hostname -s`/
+0    0    *   *   *     cd $HOME && /path/to/bak -uf -s4096 -rABCD1234 user@remote:bak/`hostname -s`/
 #
 # backup files in $HOME that are newer than `.bak' and size are not larger than 1M, every 6 hours
-*/6  *    *   *   *     cd $HOME && /path/to/bak -u -s1024 user@remote:bak/`hostname -s`/
+*/6  *    *   *   *     cd $HOME && /path/to/bak -u -s1024 -rABCD1234 user@remote:bak/`hostname -s`/
 ```
 
 # Known issues
