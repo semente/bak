@@ -195,7 +195,9 @@ function parse_commandline() {
 
 function backup() {
     [ -f $LASTFILE ] && BAKTYPE=incr || BAKTYPE=full
-    [ $BAKTYPE = full ] && touch -t 190001010000.00 $LASTFILE
+
+    # Use `$LASTFILE' as reference for the incremental backup
+    [ $BAKTYPE = incr ] && FIND_ARGS+=" -newer $LASTFILE"
 
     # Tar excludes patterns listed in .bakignore if found in the current directory
     [ -f .bakignore ] && TAR_ARGS+=" --exclude-from=.bakignore"
@@ -207,7 +209,7 @@ function backup() {
     # Make a list of files to backup that size is less than `$SIZE'
     # (if set) and newer than `$LASTFILE' (if present); then create a
     # PGP encrypted tar.gz archive.
-    find -type f $FIND_ARGS -newer $LASTFILE -print0 |
+    find -type f $FIND_ARGS -print0 |
         tar $TAR_ARGS \
             --exclude=$LASTFILE \
             --null \
@@ -235,7 +237,7 @@ function backup() {
     #      modification time won't be updated if rsync failed for at
     #      least one destination.
     #
-    [ -z $FAILED ] && touch -t `date +%Y%m%d%H%M.00` $LASTFILE
+    [ -z $FAILED ] && touch $LASTFILE
 
 }
 
