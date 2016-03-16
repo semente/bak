@@ -46,10 +46,10 @@ bak [OPTION]... [[USER@]HOST:]DEST...
 
 ### Description
 
-Backing up the current directory to one or more `DEST` in local or
-remote hosts. Backups are always encrypted and signed by GnuPG
-(PGP)-you must have a personal key configured for the user running
-`bak`.
+*bak* creates a backup of the current directory to one or more `DEST`
+in local or remote hosts. Backups are always encrypted and signed by
+GnuPG (PGP)-you must have a personal key configured for the user
+running `bak`.
 
 **Incremental backups are done by default** and are based on the last
 modification time of the file `.bak` (*lastfile*) located in the
