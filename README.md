@@ -86,7 +86,7 @@ You can get a full list of options by accessing the built-in help:
 
 ```sh
 $ bak -h
-bak  version 0.1.1
+bak version 0.1.2-pre
 Copyright (C) 2016 by Guilherme Gondim <https://semente.io>
 
 bak comes with ABSOLUTELY NO WARRANTY.  This is free software, and
@@ -104,8 +104,8 @@ backup, if desired.
 
  Examples:
 
-  bak /path/to/dest
-  bak -f /dest/one user@remote:/dest/two
+  cd $HOME && bak /media/usb/backups
+  cd /some/dir/to/backup && bak -f /dest/one user@remote:/dest/two
 
  Options:
 

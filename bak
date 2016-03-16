@@ -24,7 +24,7 @@
 set -e
 
 NAME=`basename $0`
-VERSION="0.1.1"
+VERSION="0.1.2-pre"
 WEBSITE="https://github.com/semente/bak"
 AUTHOR="Guilherme Gondim <https://semente.io>"
 
@@ -67,8 +67,8 @@ function print_help() {
     echo
     echo " Examples:"
     echo
-    echo "  $NAME /path/to/dest"
-    echo "  $NAME -f /dest/one user@remote:/dest/two"
+    echo "  cd \$HOME && $NAME /media/usb/backups"
+    echo "  cd /some/dir/to/backup && $NAME -f /dest/one user@remote:/dest/two"
     echo
     echo " Options:"
     echo
