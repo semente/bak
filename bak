@@ -202,7 +202,7 @@ function backup() {
 
     # determine where the backup file is temporarily stored before sent to DEST
     BAKFILE="`mktemp --suffix=-bak -d`/`date --utc --iso-8601=s`.${BAKTYPE}.tar.gz.gpg"
-    trap "rm -f $BAKFILE $LASTFILE && rmdir `dirname $BAKFILE`" EXIT
+    trap "rm -f $BAKFILE && rmdir `dirname $BAKFILE`" EXIT
 
     # Make a list of files to backup that size is less than `$SIZE'
     # (if set) and newer than `$LASTFILE' (if present); then create a
