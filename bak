@@ -40,7 +40,7 @@ TAR_ARGS="--exclude-backups --exclude-caches --exclude-tag=.nobackup"
 LOGGER_ARGS="--tag $NAME"
 
 function print_version() {
-    echo "$NAME  version $VERSION"
+    echo "$NAME version $VERSION"
     echo "Copyright (C) 2016 by $AUTHOR"
     echo
     echo "$NAME comes with ABSOLUTELY NO WARRANTY.  This is free software, and"
