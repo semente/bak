@@ -86,6 +86,41 @@ You can get a full list of options by accessing the built-in help:
 
 ```sh
 $ bak -h
+bak  version 0.1.1
+Copyright (C) 2016 by Guilherme Gondim <https://semente.io>
+
+bak comes with ABSOLUTELY NO WARRANTY.  This is free software, and
+you are welcome to redistribute it under certain conditions.  See the
+GNU General Public Licence version 3 for details.
+
+Usage: bak [OPTION]... [[USER@]HOST:]DEST...
+Creates a backup of the current directory to one or more DEST in local
+or remote hosts.
+
+If there is a previous backup (i.e. there is a `.bak' in the current
+directory) the next backup will ignore any files older than the
+"lastfile" `.bak'. You must use the option `-f' to force a full
+backup, if desired.
+
+ Examples:
+
+  bak /path/to/dest
+  bak -f /dest/one user@remote:/dest/two
+
+ Options:
+
+  -f                      force a full backup (i.e. ignore lastfile .bak)
+  -r RECIPIENT-KEY        encrypt for user id RECIPIENT-KEY
+  -k SIGN-KEY             use SIGN-KEY as the key to sign with
+  -s SIZE                 don't backup any file larger than SIZE kbytes
+  -u                      non interactive-commonly used for unattended operations
+  -v                      verbose (i.e. give more information during processing)
+  -d                      print commands as they are executed (for debug)
+  -n                      read commands but do not execute them (dry run)
+  -V                      print version number
+  -h                      show this help text
+
+See <https://github.com/semente/bak> for more information or bug reports.
 ```
 
 ### Exclude file
