@@ -23,62 +23,222 @@
 # exit on error
 set -e
 
-# debug -- read commands but do not execute them
-[ -n "$DEBUG" ] && set -vn
-
-# verbose -- tar, gpg and rsync runs verbosily and;
-VERBOSE=${VERBOSE:+"--verbose"}
-# print commands and their arguments as they are executed
-[ -n "$VERBOSE" ] && set -x
-
-# backup preferences
-SIGN=${SIGN:+"--sign"}
-SIGN_KEY=${SIGN_KEY:+"--local-user $BAK_SIGN_KEY"}
-RCPT_KEY=${RCPT_KEY:+"--recipient $BAK_RCPT_KEY"}
-MAX_FILE_SIZE=${MAX_FILE_SIZE:+"-size -${MAX_FILE_SIZE}k"}
-
-# command line arguments
-DEST=${1:?"missing destination operand (rsync syntax)"}
+NAME=`basename $0`
+VERSION="0.1-pre"
+WEBSITE="https://github.com/semente/bak"
+AUTHOR="Guilherme Gondim <https://semente.io>"
 
 # incremental backups are based on last modification time of this file
-LASTFILE=.bak.last
-[ -f $LASTFILE ] && BAKTYPE=incr || BAKTYPE=full
-[ $BAKTYPE = full ] && touch -t 190001010000.00 $LASTFILE
+LASTFILE=".bak"
 
-# determine where the backup file is stored before sent to DEST
-BAKFILE="`mktemp -d`/`date --utc --iso-8601=s`.${BAKTYPE}.tar.gz.gpg"
+# Use GnuPG 2.x if available
+[ -x "`which gpg2`" ] && GPG_CMD=gpg2 || GPG_CMD=gpg
 
-# setup semaphore file
-LOCKFILE=.bak.lock
-lockfile -r 0 $LOCKFILE || exit 1
+GPG_ARGS="--quiet --yes --encrypt --sign"
+RSYNC_ARGS="--chmod=0600"
+TAR_ARGS="--exclude-backups --exclude-caches --exclude-tag=.nobackup"
+LOGGER_ARGS="--tag $NAME"
 
-# activates handlers to be run when the shell receives exit signals
-trap "rm -f $LOCKFILE $BAKFILE; pkill -P $$" 0 2 3 15
+function print_version() {
+    echo "$NAME  version $VERSION"
+    echo "Copyright (C) 2016 by $AUTHOR"
+    echo
+    echo "$NAME comes with ABSOLUTELY NO WARRANTY.  This is free software, and"
+    echo "you are welcome to redistribute it under certain conditions.  See the"
+    echo "GNU General Public Licence version 3 for details."
+}
 
-# Tar excludes patterns listed in .bakignore if found in the current directory
-[ -f .bakignore ] && EXCLUDE_FROM="--exclude-from .bakignore" || EXCLUDE_FROM=""
+function print_usage() {
+    echo "Usage: $NAME [OPTION]... [[USER@]HOST:]DEST..."
+    echo "Try \`$0 -h' for more information."
+}
 
-# Make a list of files to backup that size is less than
-# `$MAX_FILE_SIZE' (if set) and newer than `$LASTFILE' (if present);
-# then create a PGP encrypted tar.gz archive.
-find -type f $MAX_FILE_SIZE -newer $LASTFILE -print0 |
-    tar $VERBOSE $EXCLUDE_FROM \
-        --exclude=$LASTFILE --exclude=$LOCKFILE \
-        --exclude-backups \
-        --exclude-caches \
-        --exclude-tag=.nobackup \
-        --exclude-vcs \
-        --null \
-        --files-from - \
-        -cz |
-    gpg $VERBOSE \
-        --yes \
-        --no-tty \
-        --encrypt $RCPT_KEY $SIGN $SIGN_KEY \
-        --output "$BAKFILE"
+function print_help() {
+    print_version
+    echo
+    print_usage | head -1
+    echo "Backup current directory to one or more DEST in local or remote hosts."
+    echo
+    echo "If a previous backup was made (i.e. there is a `.bak' in the current"
+    echo "directory) the next backup will ignore any files older than the"
+    echo "\"lastfile\" `.bak`. You must use the option `-f' to force a full"
+    echo "backup, if desired."
+    echo
+    echo " Examples:"
+    echo
+    echo "  $NAME /path/to/dest"
+    echo "  $NAME -f /dest/one user@remote:/dest/two"
+    echo
+    echo " Options:"
+    echo
+    echo "  -f                      force a full backup (i.e. ignore lastfile .bak)"
+    echo "  -r RECIPIENT-KEY        encrypt for user id RECIPIENT-KEY"
+    echo "  -k SIGN-KEY             use SIGN-KEY as the key to sign with"
+    echo "  -s SIZE                 don't backup any file larger than SIZE kbytes"
+    echo "  -u                      no interactive-commonly used for unattended operations"
+    echo "  -v                      verbose (i.e. give more information during processing)"
+    echo "  -d                      print commands as they are executed (for debug)"
+    echo "  -n                      read commands but do not execute them (dry run)"
+    echo "  -V                      print version number"
+    echo "  -h                      show this help"
+    echo
+    echo "See <$WEBSITE> for more information or bug reports."
+}
 
-# send `$BAKFILE' to DEST using rsync
-rsync $VERBOSE --chmod=0600 "$BAKFILE" "${DEST}/"
+function log() {
+    MSG="$*"
+    if [ -x "`which logger`" ]; then
+        logger $LOGGER_ARGS $MSG
+    else
+        echo "$NAME: $MSG" >&2
+    fi
+}
 
-# update last modification time of `$LASTFILE'
-touch -t `date +%Y%m%d%H%M.00` $LASTFILE
+function warn() {
+    MSG="$*"
+    if [ -n "$VERBOSE" ]; then
+        # on verbose mode, `log' will also print its output to stderr
+        log "$MSG"
+    else
+        echo "$NAME: $MSG" >&2
+        log "$MSG"
+    fi
+}
+
+function fail() {
+    MSG="$*"
+    [ -n "$MSG" ] && warn "$MSG"
+    print_usage
+    exit 2
+}
+
+function parse_commandline() {
+    while getopts fuvdnVhr:k:s: OPT; do
+        case $OPT in
+            f)
+                FULL=1
+                rm -f $LASTFILE
+                ;;
+            u)
+                UNATTENDED=1
+                GPG_ARGS+=" --batch --no-tty"
+                ;;
+            v)                  # verbose
+                VERBOSE=1
+                GPG_ARGS+=" --verbose"
+                RSYNC_ARGS+=" --verbose"
+                TAR_ARGS+=" --verbose"
+                LOGGER_ARGS+=" --stderr"
+                ;;
+            d)                  # debug
+                DEBUG=1
+                set -x
+                ;;
+            n)                  # dry run
+                DRY_RUN=1
+                fail "dry run (-n) not implemented yet"
+                #set -vn
+                ;;
+            V)                  # version
+                print_version && exit
+                ;;
+            h)                  # help
+                print_help && exit
+                ;;
+            r)
+                RCPT_KEY="$OPTARG"
+                GPG_ARGS+=" --recipient $RCPT_KEY"
+                ;;
+            k)
+                SIGN_KEY="$OPTARG"
+                GPG_ARGS+=" --local-user $SIGN_KEY"
+                ;;
+            s)
+                SIZE="$OPTARG"
+                FIND_ARGS+="-size -${SIZE}k"
+                ;;
+            *)                  # invalid option
+                fail
+        esac
+    done
+    shift `expr $OPTIND - 1`
+
+    ARGNUM=$#
+    if [ $ARGNUM -lt 1 ]; then
+        fail "missing destination operand"
+    fi
+
+    DESTS=""
+    for DEST in "$@"; do
+        # check if `$DEST' have a form `[[USER@]HOST:]DEST'
+        USER_RE="[a-z0-9A-Z][-a-z0-9A-Z_]*"
+        HOST_RE="[-a-z0-9A-Z_.]+"
+        DEST_RE="[-a-z0-9A-Z_/.~]+"
+        set +e
+        echo $DEST | grep -E "^${DEST_RE}\$" > /dev/null
+        if [ $? -gt 0 ]; then
+            echo $DEST | grep -E \
+                "^((${USER_RE}@)?${HOST_RE}:)?${DEST_RE}\$" > /dev/null
+            if [ $? -gt 0 ]; then
+                fail "invalid destination $DEST"
+            fi
+        fi
+        set -e
+
+        # excludes directory destination when performing a local backup
+        TAR_ARGS+=" --exclude=$DEST"
+
+        DESTS+=" $DEST"
+    done
+}
+
+function backup() {
+    [ -f $LASTFILE ] && BAKTYPE=incr || BAKTYPE=full
+    [ $BAKTYPE = full ] && touch -t 190001010000.00 $LASTFILE
+
+    # Tar excludes patterns listed in .bakignore if found in the current directory
+    [ -f .bakignore ] && TAR_ARGS+=" --exclude-from=.bakignore"
+
+    # determine where the backup file is temporarily stored before sent to DEST
+    BAKFILE="`mktemp --suffix=-bak -d`/`date --utc --iso-8601=s`.${BAKTYPE}.tar.gz.gpg"
+    trap "rm -f $BAKFILE $LASTFILE && rmdir `dirname $BAKFILE`" EXIT
+
+    # Make a list of files to backup that size is less than `$SIZE'
+    # (if set) and newer than `$LASTFILE' (if present); then create a
+    # PGP encrypted tar.gz archive.
+    find -type f $FIND_ARGS -newer $LASTFILE -print0 |
+        tar $TAR_ARGS \
+            --exclude=$LASTFILE \
+            --null \
+            --files-from - \
+            -cz |
+        $GPG_CMD $GPG_ARGS \
+            --output "$BAKFILE"
+
+    # send `$BAKFILE' to DEST using rsync
+    set +e
+    for DEST in $DESTS; do
+        rsync $RSYNC_ARGS "$BAKFILE" "${DEST}/"
+        if [ $? -gt 0 ]; then
+            FAILED=1
+            warn "Failed to send backtup to $DEST"
+        else
+            log "Sending backup of `pwd` to $DEST succeeded"
+        fi
+    done
+    set -e
+
+    # update last modification time of `$LASTFILE' if backup succeeded
+    # XXX: if backup failed for at least one destination `$LASTFILE'
+    #      is not updated!
+    [ -z $FAILED ] && touch -t `date +%Y%m%d%H%M.00` $LASTFILE
+
+}
+
+function main() {
+    parse_commandline "$@"
+    trap 'warn "An unknown error occurred while backing up `pwd`. Aborted"' EXIT
+    backup
+}
+
+main "$@"
