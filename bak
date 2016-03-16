@@ -229,8 +229,11 @@ function backup() {
     set -e
 
     # update last modification time of `$LASTFILE' if backup succeeded
-    # XXX: if backup failed for at least one destination `$LASTFILE'
-    #      is not updated!
+    #
+    # XXX: When sending backups to multiple destinations, `.bak' last
+    #      modification time won't be updated if rsync failed for at
+    #      least one destination.
+    #
     [ -z $FAILED ] && touch -t `date +%Y%m%d%H%M.00` $LASTFILE
 
 }
