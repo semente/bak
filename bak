@@ -57,11 +57,12 @@ function print_help() {
     print_version
     echo
     print_usage | head -1
-    echo "Backup current directory to one or more DEST in local or remote hosts."
+    echo "Creates a backup of the current directory to one or more DEST in local"
+    echo "or remote hosts."
     echo
-    echo "If a previous backup was made (i.e. there is a `.bak' in the current"
+    echo "If there is a previous backup (i.e. there is a \`.bak' in the current"
     echo "directory) the next backup will ignore any files older than the"
-    echo "\"lastfile\" `.bak`. You must use the option `-f' to force a full"
+    echo "\"lastfile\" \`.bak'. You must use the option \`-f' to force a full"
     echo "backup, if desired."
     echo
     echo " Examples:"
@@ -75,12 +76,12 @@ function print_help() {
     echo "  -r RECIPIENT-KEY        encrypt for user id RECIPIENT-KEY"
     echo "  -k SIGN-KEY             use SIGN-KEY as the key to sign with"
     echo "  -s SIZE                 don't backup any file larger than SIZE kbytes"
-    echo "  -u                      no interactive-commonly used for unattended operations"
+    echo "  -u                      non interactive-commonly used for unattended operations"
     echo "  -v                      verbose (i.e. give more information during processing)"
     echo "  -d                      print commands as they are executed (for debug)"
     echo "  -n                      read commands but do not execute them (dry run)"
     echo "  -V                      print version number"
-    echo "  -h                      show this help"
+    echo "  -h                      show this help text"
     echo
     echo "See <$WEBSITE> for more information or bug reports."
 }
@@ -136,7 +137,7 @@ function parse_commandline() {
                 ;;
             n)                  # dry run
                 DRY_RUN=1
-                fail "dry run (-n) not implemented yet"
+                fail "dry run \(-n\) not implemented yet"
                 #set -vn
                 ;;
             V)                  # version
