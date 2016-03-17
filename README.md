@@ -5,9 +5,6 @@ and use encrypted backup solution for GNU/Linux. It is designed for
 personal and desktop backups-mainly for your laptop when roaming
 around-but you can also find it useful in other situations.
 
-I wrote this script because I found *duplicity* and other alternatives
-for encrypted backups too complicated for my purposes.
-
 Although not tested on BSDs, Mac OS X, cygnus and the like, it should
 work fine in any machine with *GNU coreutils, findutils, grep, bash,
 GnuPG* and *rsync* installed. Feel free to send pull requests to
