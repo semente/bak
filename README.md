@@ -151,20 +151,22 @@ Here is an *crontab* example:
 
 ```sh
 SHELL=/bin/bash
+PATH="/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin"
+
 #RSYNC_RSH="ssh -p2222 -i somekey"
 
 # bak setup
-BAK_ARGS="-u -r ABCD1234 -k ABCD1234 -i $HOME/.ssh/id_rsa.bak"
+BAK_ARGS="-u -r ABCD1234 -k ABCD1234 -i ~/.ssh/id_rsa.bak"
 BAK_DEST="user@remote:bak/"
 
 # m  h    dom mon dow   command
 #
 # full $HOME backup at 3AM on the 1st day of every month
-0    3    1   *   *     cd $HOME && bak -f $BAK_ARGS $BAK_DEST
+0    3    1   *   *     cd ~ && bak -f $BAK_ARGS $BAK_DEST
 #
 # backup files that are newer than `.bak' and size are not larger than 1M;
 # runs 2AM at every day
-0    2    *   *   *     cd $HOME && bak -s1024 $BAK_ARGS $BAK_DEST
+0    2    *   *   *     cd ~ && bak -s1024 $BAK_ARGS $BAK_DEST
 ```
 # Known issues
 
