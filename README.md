@@ -86,6 +86,7 @@ prevent GnuPG from asking you for the recipient key for encryption.
   -r RECIPIENT-KEY        encrypt for user id RECIPIENT-KEY
   -k SIGN-KEY             use SIGN-KEY as the key to sign with
   -s SIZE                 don't backup any file larger than SIZE kbytes
+  -i IDENTIFY-FILE        selects a file for public key authentication over SSH
   -u                      non interactive-commonly used for unattended operations
   -v                      verbose (i.e. give more information during processing)
   -d                      print commands as they are executed (for debug)

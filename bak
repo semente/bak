@@ -76,6 +76,7 @@ function print_help() {
     echo "  -r RECIPIENT-KEY        encrypt for user id RECIPIENT-KEY"
     echo "  -k SIGN-KEY             use SIGN-KEY as the key to sign with"
     echo "  -s SIZE                 don't backup any file larger than SIZE kbytes"
+    echo "  -i IDENTITY-FILE        selects a identity for public key authentication over SSH"
     echo "  -u                      non interactive-commonly used for unattended operations"
     echo "  -v                      verbose (i.e. give more information during processing)"
     echo "  -d                      print commands as they are executed (for debug)"
@@ -114,7 +115,7 @@ function fail() {
 }
 
 function parse_commandline() {
-    while getopts fuvdnVhr:k:s: OPT; do
+    while getopts fuvdnVhr:k:s:i: OPT; do
         case $OPT in
             f)
                 FULL=1
@@ -157,6 +158,9 @@ function parse_commandline() {
             s)
                 SIZE="$OPTARG"
                 FIND_ARGS+="-size -${SIZE}k"
+                ;;
+            i)
+                RSYNC_ARGS+=" --rsh 'ssh -i $OPTARG'"
                 ;;
             *)                  # invalid option
                 fail
