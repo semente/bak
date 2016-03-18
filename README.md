@@ -2,8 +2,8 @@
 
 The purpose of **bak** is to be a simple, secure, and easy to set up
 and use encrypted backup solution for GNU/Linux. It is designed for
-personal and desktop backups-mainly for your laptop when roaming
-around-but you can also find it useful in other situations.
+personal and desktop backups&mdash;mainly for your laptop when roaming
+around&mdash;but you can also find it useful in other situations.
 
 Although not tested on BSDs, Mac OS X, cygnus and the like, it should
 work fine in any machine with *GNU coreutils, findutils, grep, bash,
@@ -45,7 +45,7 @@ bak [OPTION]... [[USER@]HOST:]DEST...
 
 Bak creates a backup of the current directory to one or more `DEST`
 in local or remote hosts. Backups are always encrypted and signed by
-GnuPG-you must have a PGP key configured for the user running `bak`.
+GnuPG&mdash;you must have a PGP key configured for the user running `bak`.
 
 **Incremental backups are done by default** and are based on the last
 modification time of the file `.bak` (*lastfile*) located in the
@@ -138,7 +138,7 @@ you for the PGP secret key password if your it is protected by one,
 and it may be an inconvenient for unattended backups. I chose to not
 support unsigned backups for security reasons. So, for unattended
 operations, it is recommended that the PGP key used for sign (option
-`-k`) is not protected by a password-you can still select a
+`-k`) is not protected by a password&mdash;you can still select a
 password-protected key for encryption with the option `-r`.
 
 Similarly, you might want use a non password-protected SSH identity
