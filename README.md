@@ -157,10 +157,11 @@ BAK_DEST="user@remote:bak/"
 
 # m  h    dom mon dow   command
 #
-# backup all files in $HOME at 3AM on the 1st day of every month
+# full $HOME backup at 3AM on the 1st day of every month
 0    3    1   *   *     cd $HOME && bak -f $BAK_ARGS $BAK_DEST
 #
-# backup files in $HOME that are newer than `.bak' and size are not larger than 1M; runs 2AM at every day
+# backup files that are newer than `.bak' and size are not larger than 1M;
+# runs 2AM at every day
 0    2    *   *   *     cd $HOME && bak -s1024 $BAK_ARGS $BAK_DEST
 ```
 # Known issues
