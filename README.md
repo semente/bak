@@ -74,7 +74,9 @@ $ bak -f -rABCD1234 bak /in/black
 
 If you don't have the options `default-recipient-self` and
 `default-key` configured in your `gpg.conf`, using `-r` option will
-prevent GnuPG from asking you for the recipient key for encryption.
+prevent GnuPG from asking you for the recipient key for
+encryption. However, if the option `-k` is not used the default key to
+sign with is the first key found in the secret keyring.
 
 #### Other options
 
