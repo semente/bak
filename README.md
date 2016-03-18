@@ -153,11 +153,11 @@ Here is an *crontab* example:
 SHELL=/bin/bash
 PATH="/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin"
 
-#RSYNC_RSH="ssh -p2222 -i somekey"
-
 # bak setup
 BAK_ARGS="-u -r ABCD1234 -k ABCD1234 -i ~/.ssh/id_rsa.bak"
 BAK_DEST="user@remote:bak/"
+#RSYNC_RSH="ssh -p2222 -i somekey"
+
 
 # m  h    dom mon dow   command
 #
