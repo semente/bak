@@ -154,7 +154,7 @@ SHELL=/bin/bash
 #RSYNC_RSH="ssh -p2222 -i somekey"
 
 # bak setup
-BAK_ARGS="-u -rABCD1234 -kABCD1234 -i $HOME/.ssh/id_rsa.bak"
+BAK_ARGS="-u -r ABCD1234 -k ABCD1234 -i $HOME/.ssh/id_rsa.bak"
 BAK_DEST="user@remote:bak/"
 
 # m  h    dom mon dow   command
