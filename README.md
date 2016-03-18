@@ -30,8 +30,8 @@ computer:
 
   - Bash
   - GNU Tar and Gzip
-  - dirname, mktemp, rm, touch (GNU coreutils)
-  - find (GNU findutils)
+  - GNU coreutils (`dirname`, `mktemp`, `rm`, `touch`)
+  - GNU findutils (`find`)
   - GNU grep
   - rsync
   - GnuPG
@@ -95,6 +95,9 @@ prevent GnuPG from asking you for the recipient key for encryption.
   -h                      show this help text
 ```
 
+The option `-u` basically tells GnuPG to use the options *--batch
+--tty* (see *gpg(1) manpage* for more information).
+
 ### Exclude file
 
 Bak will exclude from backup patterns (Tar syntax) listed in the
@@ -123,32 +126,46 @@ the directory `.local` from the root of the backup source I had to use
 
 ## Scheduled and unattended backups
 
-I do not have any scheduled backups on my laptop, I have a script that
-reminds me from time to time to backup, allowing me to decide if it is
-a good time for a backup and what options I should use.
+I currently do not have any scheduled backups on my laptop, I have a
+script that reminds me from time to time to backup, allowing me to
+decide if it is a good time for a backup and what options I should
+use.
 
-However, you might want to schedule your backups by using *cron*. For
-unattended operations, it is recommended that you use the option `-u`,
-it basically tells GnuPG to use the options *--batch --tty* (see
-*gpg(1) manpage* for more information).
+However, you might want to schedule your backups by using *cron* or
+other tool.
 
-The following is an example I wrote but didn't have time to test yet,
-so please make sure it is running fine before trusting in your
-backups.
+Once Bak **always signs** the resulting backup archive it will prompt
+you for the PGP secret key password if your it is protected by one,
+and it may be an inconvenient for unattended backups. I chose to not
+support unsigned backups for security reasons. So, for unattended
+operations, it is recommended that the PGP key used for sign (option
+`-k`) is not protected by a password-you can still select a
+password-protected key for encryption with the option `-r`.
+
+Similarly, you might want use a non password-protected SSH identity
+for public key authentication over SSH. Use the option `-i` to select
+the desired SSH private key. You can also set the environment variable
+`RSYNC_RSH` for the same purpose or to tweak your SSH connections (see
+*rsync(1) manpage* for more information).
+
+Here is an *crontab* example:
 
 ```sh
 SHELL=/bin/bash
+#RSYNC_RSH="ssh -p2222 -i somekey"
+
+# bak setup
+BAK_ARGS="-u -rABCD1234 -kABCD1234 -i $HOME/.ssh/id_rsa.bak"
+BAK_DEST="user@remote:bak/"
 
 # m  h    dom mon dow   command
 #
-
 # backup all files in $HOME at 3AM on the 1st day of every month
-0    3    1   *   *     cd $HOME && /path/to/bak -uf -rABCD1234 user@remote:bak/`hostname -s`/
-
+0    3    1   *   *     cd $HOME && bak -f $BAK_ARGS $BAK_DEST
+#
 # backup files in $HOME that are newer than `.bak' and size are not larger than 1M; runs 2AM at every day
-0    2    *   *   *     cd $HOME && /path/to/bak -u -s1024 -rABCD1234 user@remote:bak/`hostname -s`/
+0    2    *   *   *     cd $HOME && bak -s1024 $BAK_ARGS $BAK_DEST
 ```
-
 # Known issues
 
 - It is recommended that you do full backups (`-f`) if you have
@@ -163,4 +180,4 @@ SHELL=/bin/bash
   duplicates files in the destinations that were updated
   successfully. It is not a big deal.
 
-- dry run (`-n`) option is not implemented yet
+- dry run (`-n`) option is not implemented yet.
