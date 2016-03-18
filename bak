@@ -160,7 +160,7 @@ function parse_commandline() {
                 FIND_ARGS+="-size -${SIZE}k"
                 ;;
             i)
-                RSYNC_ARGS+=" --rsh 'ssh -i $OPTARG'"
+                RSH_OPT="ssh -i $OPTARG"
                 ;;
             *)                  # invalid option
                 fail
@@ -225,7 +225,7 @@ function backup() {
     # send `$BAKFILE' to DEST using rsync
     set +e
     for DEST in $DESTS; do
-        rsync $RSYNC_ARGS "$BAKFILE" "${DEST}/"
+        rsync $RSYNC_ARGS --rsh "${RSH_OPT:-ssh}" "$BAKFILE" "${DEST}/"
         if [ $? -gt 0 ]; then
             FAILED=1
             warn "Failed to send backtup to $DEST"
