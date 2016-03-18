@@ -24,7 +24,7 @@
 set -e
 
 NAME=`basename $0`
-VERSION="0.1.2"
+VERSION="0.2-pre"
 WEBSITE="https://github.com/semente/bak"
 AUTHOR="Guilherme Gondim <https://semente.io>"
 

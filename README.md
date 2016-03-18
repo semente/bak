@@ -46,10 +46,9 @@ bak [OPTION]... [[USER@]HOST:]DEST...
 
 ### Description
 
-*bak* creates a backup of the current directory to one or more `DEST`
+Bak creates a backup of the current directory to one or more `DEST`
 in local or remote hosts. Backups are always encrypted and signed by
-GnuPG (PGP)-you must have a personal key configured for the user
-running `bak`.
+GnuPG-you must have a PGP key configured for the user running `bak`.
 
 **Incremental backups are done by default** and are based on the last
 modification time of the file `.bak` (*lastfile*) located in the
@@ -97,11 +96,11 @@ prevent GnuPG from asking you for the recipient key for encryption.
 
 ### Exclude file
 
-*bak* will exclude from backup patterns (Tar syntax) listed in the
+Bak will exclude from backup patterns (Tar syntax) listed in the
 file `.bakignore` of the current directory. It will also exclude any
 directory that contains the file `.nobackup`.
 
-*bak* does not respect `.bakignore` files from subdirectories, i.e.,
+Bak does not respect `.bakignore` files from subdirectories, i.e.,
 it just load the `./.bakignore` file.
 
 An example of what could be a `~/.bakignore` file:
@@ -125,8 +124,7 @@ the directory `.local` from the root of the backup source I had to use
 
 I do not have any scheduled backups on my laptop, I have a script that
 reminds me from time to time to backup, allowing me to decide if it is
-a good time for a backup and what options I should use considering
-mainly the current Internet connection.
+a good time for a backup and what options I should use.
 
 However, you might want to schedule your backups by using *cron*. For
 unattended operations, it is recommended that you use the option `-u`,
@@ -143,26 +141,23 @@ SHELL=/bin/bash
 # m  h    dom mon dow   command
 #
 
-# backup all files in $HOME every Sunday
-0    0    *   *   0     cd $HOME && /path/to/bak -uf -rABCD1234 user@remote:bak/`hostname -s`/
+# backup all files in $HOME at 3AM on the 1st day of every month
+0    3    1   *   *     cd $HOME && /path/to/bak -uf -rABCD1234 user@remote:bak/`hostname -s`/
 
-# backup all files in $HOME that size are not larger than 4M (4096kb), daily
-0    0    *   *   *     cd $HOME && /path/to/bak -uf -s4096 -rABCD1234 user@remote:bak/`hostname -s`/
-
-# backup files in $HOME that are newer than `.bak' and size are not larger than 1M, every 6 hours
-*/6  *    *   *   *     cd $HOME && /path/to/bak -u -s1024 -rABCD1234 user@remote:bak/`hostname -s`/
+# backup files in $HOME that are newer than `.bak' and size are not larger than 1M; runs 2AM at every day
+0    2    *   *   *     cd $HOME && /path/to/bak -u -s1024 -rABCD1234 user@remote:bak/`hostname -s`/
 ```
 
 # Known issues
 
 - It is recommended that you do full backups (`-f`) if you have
-  changed your `.bakignore` file. *bak* won't include a removed or
+  changed your `.bakignore` file. Bak won't include a removed or
   modified pattern from this file that was changed before *lastfile*
   (`.bak`) in the next incremental backup. A similar issue will occur
   when using the option `-s`.
 
 - When sending backups to multiple destinations, *lastfile*'s (`.bak`)
-  last modification time won't be updated if *bak* failed for at least
+  last modification time won't be updated if Bak failed for at least
   one destination. It means that the next incremental backup will have
   duplicates files in the destinations that were updated
   successfully. It is not a big deal.
