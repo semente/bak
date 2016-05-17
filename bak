@@ -248,6 +248,7 @@ function Backup() {
 }
 
 function Main() {
+    umask 077
     ParseCommandLine "$@"
     trap 'Warn "An unknown error occurred while backing up `pwd`. Aborted"' EXIT
     Backup
