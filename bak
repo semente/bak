@@ -31,9 +31,6 @@ AUTHOR="Guilherme Gondim <https://semente.io>"
 # incremental backups are based on last modification time of this file
 LASTFILE=".bak"
 
-# Use GnuPG 2.x if available
-[ -x "`which gpg2`" ] && GPG_CMD=gpg2 || GPG_CMD=gpg
-
 GPG_ARGS=(--quiet --yes --encrypt --sign)
 RSYNC_ARGS=(--chmod=0600)
 TAR_ARGS=(--exclude-backups --exclude-caches --exclude-tag=.nobackup)
@@ -220,7 +217,7 @@ function backup() {
             --null \
             --files-from - \
             -cz |
-        $GPG_CMD "${GPG_ARGS[@]}" \
+        gpg "${GPG_ARGS[@]}" \
             --output "$BAKFILE"
 
     # send `$BAKFILE' to DEST using rsync
