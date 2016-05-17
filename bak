@@ -156,7 +156,7 @@ function parse_commandline() {
                 ;;
             s)
                 size="$OPTARG"
-                FIND_ARGS+=("-size -${size}k")
+                FIND_ARGS+=(-size "-${size}k")
                 ;;
             i)
                 identity_file="$OPTARG"
@@ -202,7 +202,7 @@ function backup() {
     [ -f "$LASTFILE" ] && baktype=incr || baktype=full
 
     # Use `$LASTFILE' as reference for the incremental backup
-    [ $baktype = incr ] && FIND_ARGS+=("-newer $LASTFILE")
+    [ $baktype = incr ] && FIND_ARGS+=(-newer "$LASTFILE")
 
     # Tar excludes patterns listed in .bakignore if found in the current directory
     [ -f .bakignore ] && TAR_ARGS+=(--exclude-from=".bakignore")
