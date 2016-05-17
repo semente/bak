@@ -1,4 +1,4 @@
-# bak -- simple, efficient, and encrypted backups
+# bak &ndash; simple, efficient, and encrypted backups
 
 The purpose of **bak** is to be a simple, secure, and easy to set up
 and use encrypted backup solution for GNU/Linux. It is designed for
@@ -165,7 +165,7 @@ BAK_DEST="user@remote:bak/"
 0    3    1   *   *     cd ~ && bak -f $BAK_ARGS $BAK_DEST
 #
 # backup files that are newer than `.bak' and size are not larger than 1M;
-# runs 2AM at every day
+# runs at 2AM every day
 0    2    *   *   *     cd ~ && bak -s1024 $BAK_ARGS $BAK_DEST
 ```
 # Known issues
