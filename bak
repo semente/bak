@@ -41,7 +41,7 @@ DESTS=()
 LASTFILE=".bak"
 
 
-function print_version() {
+function PrintVersion() {
     echo "$NAME version $VERSION"
     echo "Copyright (C) 2016 by $AUTHOR"
     echo
@@ -50,15 +50,15 @@ function print_version() {
     echo "GNU General Public Licence version 3 for details."
 }
 
-function print_usage() {
+function PrintUsage() {
     echo "Usage: $NAME [OPTION]... [[USER@]HOST:]DEST..."
     echo "Try \`$0 -h' for more information."
 }
 
-function print_help() {
-    print_version
+function PrintHelp() {
+    PrintVersion
     echo
-    print_usage | head -1
+    PrintUsage | head -1
     echo "Creates a backup of the current directory to one or more DEST in local"
     echo "or remote hosts."
     echo
@@ -89,7 +89,7 @@ function print_help() {
     echo "See <$WEBSITE> for more information or bug reports."
 }
 
-function log() {
+function Log() {
     local msg="$*"
     if [ -x "`which logger`" ]; then
         logger "${LOGGER_ARGS[@]}" $msg
@@ -98,25 +98,25 @@ function log() {
     fi
 }
 
-function warn() {
+function Warn() {
     local msg="$*"
     if [ $VERBOSE = 1 ]; then
-        # on verbose mode, `log' will also print its output to stderr
-        log "$msg"
+        # on verbose mode, `Log' will also print its output to stderr
+        Log "$msg"
     else
         echo "$NAME: $msg" >&2
-        log "$msg"
+        Log "$msg"
     fi
 }
 
-function fail() {
+function Fail() {
     local msg="$*"
-    [ -n "$msg" ] && warn "$msg"
-    print_usage
+    [ -n "$msg" ] && Warn "$msg"
+    PrintUsage
     exit 2
 }
 
-function parse_commandline() {
+function ParseCommandLine() {
     local option rcpt_key sign_key size identity_file
     while getopts fuvdnVhr:k:s:i: option; do
         case $option in
@@ -137,14 +137,14 @@ function parse_commandline() {
                 set -x
                 ;;
             n)                  # dry run
-                fail "dry run \(-n\) not implemented yet"
+                Fail "dry run \(-n\) not implemented yet"
                 #set -vn
                 ;;
             V)                  # version
-                print_version && exit
+                PrintVersion && exit
                 ;;
             h)                  # help
-                print_help && exit
+                PrintHelp && exit
                 ;;
             r)
                 rcpt_key="$OPTARG"
@@ -163,14 +163,14 @@ function parse_commandline() {
                 RSYNC_ARGS+=(--rsh="ssh -i $identity_file")
                 ;;
             *)                  # invalid option
-                fail
+                Fail
         esac
     done
     shift `expr $OPTIND - 1`
 
     local argnum=$#
     if [ $argnum -lt 1 ]; then
-        fail "missing destination operand"
+        Fail "missing destination operand"
     fi
 
     local dest
@@ -185,7 +185,7 @@ function parse_commandline() {
             echo $dest | grep -E \
                 "^((${user_re}@)?${host_re}:)?${dest_re}\$" > /dev/null
             if [ $? -gt 0 ]; then
-                fail "invalid destination $dest"
+                Fail "invalid destination $dest"
             fi
         fi
         set -e
@@ -197,7 +197,7 @@ function parse_commandline() {
     done
 }
 
-function backup() {
+function Backup() {
     local baktype
     [ -f "$LASTFILE" ] && baktype=incr || baktype=full
 
@@ -230,9 +230,9 @@ function backup() {
         rsync "${RSYNC_ARGS[@]}" "$bakfile" "${dest}/"
         if [ $? -gt 0 ]; then
             FAILED=1
-            warn "Failed to send backtup to $dest"
+            Warn "Failed to send backtup to $dest"
         else
-            log "Sending backup of `pwd` to $dest succeeded"
+            Log "Sending backup of `pwd` to $dest succeeded"
         fi
     done
     set -e
@@ -247,10 +247,10 @@ function backup() {
 
 }
 
-function main() {
-    parse_commandline "$@"
-    trap 'warn "An unknown error occurred while backing up `pwd`. Aborted"' EXIT
-    backup
+function Main() {
+    ParseCommandLine "$@"
+    trap 'Warn "An unknown error occurred while backing up `pwd`. Aborted"' EXIT
+    Backup
 }
 
-main "$@"
+Main "$@"
