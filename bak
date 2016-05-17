@@ -28,13 +28,18 @@ VERSION="0.2-pre"
 WEBSITE="https://github.com/semente/bak"
 AUTHOR="Guilherme Gondim <https://semente.io>"
 
+FIND_ARGS=()
+GPG_ARGS=(--quiet --yes --encrypt --sign)
+LOGGER_ARGS=(--tag="$NAME")
+RSYNC_ARGS=(--chmod=0600)
+TAR_ARGS=(--exclude-backups --exclude-caches --exclude-tag=.nobackup)
+
+VERBOSE=0
+DESTS=()
+
 # incremental backups are based on last modification time of this file
 LASTFILE=".bak"
 
-GPG_ARGS=(--quiet --yes --encrypt --sign)
-RSYNC_ARGS=(--chmod=0600)
-TAR_ARGS=(--exclude-backups --exclude-caches --exclude-tag=.nobackup)
-LOGGER_ARGS=(--tag="$NAME")
 
 function print_version() {
     echo "$NAME version $VERSION"
@@ -85,41 +90,40 @@ function print_help() {
 }
 
 function log() {
-    MSG="$*"
+    local msg="$*"
     if [ -x "`which logger`" ]; then
-        logger "${LOGGER_ARGS[@]}" $MSG
+        logger "${LOGGER_ARGS[@]}" $msg
     else
-        echo "$NAME: $MSG" >&2
+        echo "$NAME: $msg" >&2
     fi
 }
 
 function warn() {
-    MSG="$*"
-    if [ -n "$VERBOSE" ]; then
+    local msg="$*"
+    if [ $VERBOSE = 1 ]; then
         # on verbose mode, `log' will also print its output to stderr
-        log "$MSG"
+        log "$msg"
     else
-        echo "$NAME: $MSG" >&2
-        log "$MSG"
+        echo "$NAME: $msg" >&2
+        log "$msg"
     fi
 }
 
 function fail() {
-    MSG="$*"
-    [ -n "$MSG" ] && warn "$MSG"
+    local msg="$*"
+    [ -n "$msg" ] && warn "$msg"
     print_usage
     exit 2
 }
 
 function parse_commandline() {
-    while getopts fuvdnVhr:k:s:i: OPT; do
-        case $OPT in
+    local option rcpt_key sign_key size identity_file
+    while getopts fuvdnVhr:k:s:i: option; do
+        case $option in
             f)
-                FULL=1
-                rm -f $LASTFILE
+                rm -f "$LASTFILE"
                 ;;
             u)
-                UNATTENDED=1
                 GPG_ARGS+=(--batch --no-tty)
                 ;;
             v)                  # verbose
@@ -130,11 +134,9 @@ function parse_commandline() {
                 LOGGER_ARGS+=(--stderr)
                 ;;
             d)                  # debug
-                DEBUG=1
                 set -x
                 ;;
             n)                  # dry run
-                DRY_RUN=1
                 fail "dry run \(-n\) not implemented yet"
                 #set -vn
                 ;;
@@ -145,20 +147,20 @@ function parse_commandline() {
                 print_help && exit
                 ;;
             r)
-                RCPT_KEY="$OPTARG"
-                GPG_ARGS+=(--recipient="$RCPT_KEY")
+                rcpt_key="$OPTARG"
+                GPG_ARGS+=(--recipient="$rcpt_key")
                 ;;
             k)
-                SIGN_KEY="$OPTARG"
-                GPG_ARGS+=(--local-user="$SIGN_KEY")
+                sign_key="$OPTARG"
+                GPG_ARGS+=(--local-user="$sign_key")
                 ;;
             s)
-                SIZE="$OPTARG"
-                FIND_ARGS+=("-size -${SIZE}k")
+                size="$OPTARG"
+                FIND_ARGS+=("-size -${size}k")
                 ;;
             i)
-                IDENTITY_FILE="$OPTARG"
-                RSYNC_ARGS+=(--rsh="ssh -i $IDENTITY_FILE")
+                identity_file="$OPTARG"
+                RSYNC_ARGS+=(--rsh="ssh -i $identity_file")
                 ;;
             *)                  # invalid option
                 fail
@@ -166,69 +168,71 @@ function parse_commandline() {
     done
     shift `expr $OPTIND - 1`
 
-    ARGNUM=$#
-    if [ $ARGNUM -lt 1 ]; then
+    local argnum=$#
+    if [ $argnum -lt 1 ]; then
         fail "missing destination operand"
     fi
 
-    DESTS=()
-    for DEST in "$@"; do
-        # check if `$DEST' have a form `[[USER@]HOST:]DEST'
-        USER_RE="[a-z0-9A-Z][-a-z0-9A-Z_]*"
-        HOST_RE="[-a-z0-9A-Z_.]+"
-        DEST_RE="[-a-z0-9A-Z_/.~]+"
+    local dest
+    for dest in "$@"; do
+        # check if `$dest' have a form `[[USER@]HOST:]DEST'
+        local user_re="[a-z0-9A-Z][-a-z0-9A-Z_]*"
+        local host_re="[-a-z0-9A-Z_.]+"
+        local dest_re="[-a-z0-9A-Z_/.~]+"
         set +e
-        echo $DEST | grep -E "^${DEST_RE}\$" > /dev/null
+        echo $dest | grep -E "^${dest_re}\$" > /dev/null
         if [ $? -gt 0 ]; then
-            echo $DEST | grep -E \
-                "^((${USER_RE}@)?${HOST_RE}:)?${DEST_RE}\$" > /dev/null
+            echo $dest | grep -E \
+                "^((${user_re}@)?${host_re}:)?${dest_re}\$" > /dev/null
             if [ $? -gt 0 ]; then
-                fail "invalid destination $DEST"
+                fail "invalid destination $dest"
             fi
         fi
         set -e
 
         # excludes directory destination when performing a local backup
-        TAR_ARGS+=(--exclude="$DEST")
+        TAR_ARGS+=(--exclude="$dest")
 
-        DESTS+=("$DEST")
+        DESTS+=("$dest")
     done
 }
 
 function backup() {
-    [ -f $LASTFILE ] && BAKTYPE=incr || BAKTYPE=full
+    local baktype
+    [ -f "$LASTFILE" ] && baktype=incr || baktype=full
 
     # Use `$LASTFILE' as reference for the incremental backup
-    [ $BAKTYPE = incr ] && FIND_ARGS+=("-newer $LASTFILE")
+    [ $baktype = incr ] && FIND_ARGS+=("-newer $LASTFILE")
 
     # Tar excludes patterns listed in .bakignore if found in the current directory
     [ -f .bakignore ] && TAR_ARGS+=(--exclude-from=".bakignore")
 
     # determine where the backup file is temporarily stored before sent to DEST
-    BAKFILE="`mktemp --suffix=-bak -d`/`date --utc --iso-8601=s`.${BAKTYPE}.tar.gz.gpg"
-    trap "rm -f $BAKFILE && rmdir `dirname $BAKFILE`" EXIT
+    local bakfile="`mktemp --suffix=-bak -d`/`date --utc --iso-8601=s`.${baktype}.tar.gz.gpg"
+    trap "rm -f $bakfile && rmdir `dirname $bakfile`" EXIT
 
     # Make a list of files to backup that size is less than `$SIZE'
     # (if set) and newer than `$LASTFILE' (if present); then create a
     # PGP encrypted tar.gz archive.
     find -type f "${FIND_ARGS[@]}" -print0 |
         tar "${TAR_ARGS[@]}" \
-            --exclude=$LASTFILE \
+            --exclude="$LASTFILE" \
             --null \
             --files-from - \
             -cz |
         gpg "${GPG_ARGS[@]}" \
-            --output "$BAKFILE"
+            --output "$bakfile"
 
-    # send `$BAKFILE' to DEST using rsync
+    # send `$bakfile' to DEST using rsync
     set +e
-    for DEST in "${DESTS[@]}"; do
-        rsync "${RSYNC_ARGS[@]}" "$BAKFILE" "${DEST}/"
+    local dest
+    for dest in "${DESTS[@]}"; do
+        rsync "${RSYNC_ARGS[@]}" "$bakfile" "${dest}/"
         if [ $? -gt 0 ]; then
             FAILED=1
-            warn "Failed to send backtup to $DEST"
+            warn "Failed to send backtup to $dest"
         else
-            log "Sending backup of `pwd` to $DEST succeeded"
+            log "Sending backup of `pwd` to $dest succeeded"
         fi
     done
     set -e
@@ -239,7 +243,7 @@ function backup() {
     #      modification time won't be updated if rsync failed for at
     #      least one destination.
     #
-    [ -z $FAILED ] && touch $LASTFILE
+    [ -z $FAILED ] && touch "$LASTFILE"
 
 }
 
