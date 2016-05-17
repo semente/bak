@@ -34,10 +34,10 @@ LASTFILE=".bak"
 # Use GnuPG 2.x if available
 [ -x "`which gpg2`" ] && GPG_CMD=gpg2 || GPG_CMD=gpg
 
-GPG_ARGS="--quiet --yes --encrypt --sign"
-RSYNC_ARGS="--chmod=0600"
-TAR_ARGS="--exclude-backups --exclude-caches --exclude-tag=.nobackup"
-LOGGER_ARGS="--tag $NAME"
+GPG_ARGS=(--quiet --yes --encrypt --sign)
+RSYNC_ARGS=(--chmod=0600)
+TAR_ARGS=(--exclude-backups --exclude-caches --exclude-tag=.nobackup)
+LOGGER_ARGS=(--tag="$NAME")
 
 function print_version() {
     echo "$NAME version $VERSION"
@@ -90,7 +90,7 @@ function print_help() {
 function log() {
     MSG="$*"
     if [ -x "`which logger`" ]; then
-        logger $LOGGER_ARGS $MSG
+        logger "${LOGGER_ARGS[@]}" $MSG
     else
         echo "$NAME: $MSG" >&2
     fi
@@ -123,14 +123,14 @@ function parse_commandline() {
                 ;;
             u)
                 UNATTENDED=1
-                GPG_ARGS+=" --batch --no-tty"
+                GPG_ARGS+=(--batch --no-tty)
                 ;;
             v)                  # verbose
                 VERBOSE=1
-                GPG_ARGS+=" --verbose"
-                RSYNC_ARGS+=" --verbose"
-                TAR_ARGS+=" --verbose"
-                LOGGER_ARGS+=" --stderr"
+                GPG_ARGS+=(--verbose)
+                RSYNC_ARGS+=(--verbose)
+                TAR_ARGS+=(--verbose)
+                LOGGER_ARGS+=(--stderr)
                 ;;
             d)                  # debug
                 DEBUG=1
@@ -149,18 +149,19 @@ function parse_commandline() {
                 ;;
             r)
                 RCPT_KEY="$OPTARG"
-                GPG_ARGS+=" --recipient $RCPT_KEY"
+                GPG_ARGS+=(--recipient="$RCPT_KEY")
                 ;;
             k)
                 SIGN_KEY="$OPTARG"
-                GPG_ARGS+=" --local-user $SIGN_KEY"
+                GPG_ARGS+=(--local-user="$SIGN_KEY")
                 ;;
             s)
                 SIZE="$OPTARG"
-                FIND_ARGS+="-size -${SIZE}k"
+                FIND_ARGS+=("-size -${SIZE}k")
                 ;;
             i)
-                RSH_OPT="ssh -i $OPTARG"
+                IDENTITY_FILE="$OPTARG"
+                RSYNC_ARGS+=(--rsh="ssh -i $IDENTITY_FILE")
                 ;;
             *)                  # invalid option
                 fail
@@ -173,7 +174,7 @@ function parse_commandline() {
         fail "missing destination operand"
     fi
 
-    DESTS=""
+    DESTS=()
     for DEST in "$@"; do
         # check if `$DEST' have a form `[[USER@]HOST:]DEST'
         USER_RE="[a-z0-9A-Z][-a-z0-9A-Z_]*"
@@ -191,9 +192,9 @@ function parse_commandline() {
         set -e
 
         # excludes directory destination when performing a local backup
-        TAR_ARGS+=" --exclude=$DEST"
+        TAR_ARGS+=(--exclude="$DEST")
 
-        DESTS+=" $DEST"
+        DESTS+=("$DEST")
     done
 }
 
@@ -201,10 +202,10 @@ function backup() {
     [ -f $LASTFILE ] && BAKTYPE=incr || BAKTYPE=full
 
     # Use `$LASTFILE' as reference for the incremental backup
-    [ $BAKTYPE = incr ] && FIND_ARGS+=" -newer $LASTFILE"
+    [ $BAKTYPE = incr ] && FIND_ARGS+=("-newer $LASTFILE")
 
     # Tar excludes patterns listed in .bakignore if found in the current directory
-    [ -f .bakignore ] && TAR_ARGS+=" --exclude-from=.bakignore"
+    [ -f .bakignore ] && TAR_ARGS+=(--exclude-from=".bakignore")
 
     # determine where the backup file is temporarily stored before sent to DEST
     BAKFILE="`mktemp --suffix=-bak -d`/`date --utc --iso-8601=s`.${BAKTYPE}.tar.gz.gpg"
@@ -213,19 +214,19 @@ function backup() {
     # Make a list of files to backup that size is less than `$SIZE'
     # (if set) and newer than `$LASTFILE' (if present); then create a
     # PGP encrypted tar.gz archive.
-    find -type f $FIND_ARGS -print0 |
-        tar $TAR_ARGS \
+    find -type f "${FIND_ARGS[@]}" -print0 |
+        tar "${TAR_ARGS[@]}" \
             --exclude=$LASTFILE \
             --null \
             --files-from - \
             -cz |
-        $GPG_CMD $GPG_ARGS \
+        $GPG_CMD "${GPG_ARGS[@]}" \
             --output "$BAKFILE"
 
     # send `$BAKFILE' to DEST using rsync
     set +e
-    for DEST in $DESTS; do
-        rsync $RSYNC_ARGS --rsh "${RSH_OPT:-ssh}" "$BAKFILE" "${DEST}/"
+    for DEST in "${DESTS[@]}"; do
+        rsync "${RSYNC_ARGS[@]}" "$BAKFILE" "${DEST}/"
         if [ $? -gt 0 ]; then
             FAILED=1
             warn "Failed to send backtup to $DEST"
