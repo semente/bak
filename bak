@@ -23,22 +23,32 @@
 # exit on error
 set -e
 
+# default settings
+FIND_ARGS=()
+GPG_ARGS=(--quiet --yes --encrypt --sign)
+LOGGER_ARGS=()
+RSYNC_ARGS=(--chmod=0600)
+TAR_ARGS=(--exclude-backups --exclude-caches --exclude-tag=.nobackup)
+
+# load custom settings
+for BAKRC in "${XDG_CONFIG_HOME:-${HOME}/.config/bak/bakrc}" "${HOME}/.bakrc"; do
+    if [ -f "$BAKRC" ]; then
+        source "$BAKRC"
+        break
+    fi
+done
+
+# meta data
 NAME=`basename $0`
 VERSION="0.2-pre"
 WEBSITE="https://github.com/semente/bak"
 AUTHOR="Guilherme Gondim <https://semente.io>"
 
-FIND_ARGS=()
-GPG_ARGS=(--quiet --yes --encrypt --sign)
-LOGGER_ARGS=(--tag="$NAME")
-RSYNC_ARGS=(--chmod=0600)
-TAR_ARGS=(--exclude-backups --exclude-caches --exclude-tag=.nobackup)
-
-VERBOSE=0
+# internal use
 DESTS=()
-
-# incremental backups are based on last modification time of this file
-LASTFILE=".bak"
+FORCE_FULL=0
+VERBOSE=0
+LASTFILE=".${NAME}"
 
 
 function PrintVersion() {
@@ -92,7 +102,7 @@ function PrintHelp() {
 function Log() {
     local msg="$*"
     if [ -x "`which logger`" ]; then
-        logger "${LOGGER_ARGS[@]}" $msg
+        logger "${LOGGER_ARGS[@]}" --tag="$NAME" $msg
     else
         echo "$NAME: $msg" >&2
     fi
