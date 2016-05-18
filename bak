@@ -31,7 +31,8 @@ RSYNC_ARGS=(--chmod=0600)
 TAR_ARGS=(--exclude-backups --exclude-caches --exclude-tag=.nobackup)
 
 # load custom settings
-for BAKRC in "${XDG_CONFIG_HOME:-${HOME}/.config/bak/bakrc}" "${HOME}/.bakrc"; do
+# XXX: undocumented; use carefully
+for BAKRC in ".bakrc" "${XDG_CONFIG_HOME:-${HOME}/.config/bak/bakrc}" "${HOME}/.bakrc"; do
     if [ -f "$BAKRC" ]; then
         source "$BAKRC"
         break
@@ -111,7 +112,8 @@ function Log() {
 function Warn() {
     local msg="$*"
     if [ $VERBOSE = 1 ]; then
-        # on verbose mode, `Log' will also print its output to stderr
+        # On verbose mode, `Log' will also print its output to stderr
+        # so there is no need to "echoing" the message here
         Log "$msg"
     else
         echo "$NAME: $msg" >&2
