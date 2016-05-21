@@ -30,6 +30,9 @@ LOGGER_ARGS=()
 RSYNC_ARGS=(--chmod=0600)
 TAR_ARGS=(--exclude-backups --exclude-caches --exclude-tag=.nobackup)
 
+# Tar excludes patterns listed in .bakignore if found in the current directory
+[ -f .bakignore ] && TAR_ARGS+=(--exclude=.bakignore --exclude-from=".bakignore")
+
 # load custom settings
 # XXX: undocumented; use carefully
 for BAKRC in ".bakrc" "${XDG_CONFIG_HOME:-${HOME}/.config/bak/bakrc}" "${HOME}/.bakrc"; do
@@ -215,9 +218,6 @@ function Backup() {
 
     # Use `$LASTFILE' as reference for the incremental backup
     [ $baktype = incr ] && FIND_ARGS+=(-newer "$LASTFILE")
-
-    # Tar excludes patterns listed in .bakignore if found in the current directory
-    [ -f .bakignore ] && TAR_ARGS+=(--exclude-from=".bakignore")
 
     # determine where the backup file is temporarily stored before sent to DEST
     local bakfile="`mktemp --suffix=-bak -d`/`date --utc --iso-8601=s`.${baktype}.tar.gz.gpg"
