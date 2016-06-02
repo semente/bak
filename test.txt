@@ -1,0 +1,41 @@
+$ BAK_DATA=`mktemp --suffix=-data.bak -d`
+$ BAK_DEST_ONE=`mktemp --suffix=-dest1.bak -d`
+$ BAK_DEST_TWO=`mktemp --suffix=-dest2.bak -d`
+$ BAK_DEST_THREE=`mktemp --suffix=-dest3.bak -d`
+$ BAK_RESTORE=`mktemp --suffix=-restore.bak -d`
+$ BAK_LASTFILE_ONE=".bak.`echo "$BAK_DEST_ONE" | sha1sum | cut -c -8`"
+$ BAK_LASTFILE_TWO=".bak.`echo "$BAK_DEST_TWO" | sha1sum | cut -c -8`"
+$ cd $BAK_DATA
+$ echo "bak test one" > file1
+$ echo "bak test two" > file2
+$ echo "./.*" > .bakignore
+$ touch .ignored-file
+$ sleep 1
+$ bak $BAK_DEST_ONE $BAK_DEST_TWO 2>/dev/null
+$ test -f "$BAK_LASTFILE_ONE" -a -f "$BAK_LASTFILE_TWO"  #=> --exit 0
+$ echo "bak test two [2]" >> file2
+$ echo "bak test three" > file3
+$ bak $BAK_DEST_ONE $BAK_DEST_TWO $BAK_DEST_THREE 2>/dev/null
+$ cd $BAK_RESTORE
+$ gpg --quiet --no-tty --decrypt ${BAK_DEST_ONE}/*full*.gpg 2>/dev/null | tar -xzv | sort
+./file1
+./file2
+$ gpg --quiet --no-tty --decrypt ${BAK_DEST_TWO}/*incr*.gpg 2>/dev/null | tar -xzv | sort
+./file2
+./file3
+$ cat file1 file2 file3
+bak test one
+bak test two
+bak test two [2]
+bak test three
+$ gpg --quiet --no-tty --decrypt ${BAK_DEST_THREE}/*full*.gpg 2>/dev/null | tar -xzv | sort
+./file1
+./file2
+./file3
+$ cat file1 file2 file3
+bak test one
+bak test two
+bak test two [2]
+bak test three
+$ BAK_OTHER_DEST=`mktemp --suffix=-dest0.bak -d`
+$ for dir in /etc /srv; do cd $dir && bak -s 8 $BAK_OTHER_DEST/$dir 2>/dev/null; done #=> --exit 0
