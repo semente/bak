@@ -48,10 +48,10 @@ in local or remote hosts. Backups are always encrypted and signed by
 GnuPG&mdash;you must have a PGP key configured for the user running `bak`.
 
 **Incremental backups are done by default** and are based on the last
-modification time of the file `.bak` (*lastfile*) located in the
-current directory. This file is automatically created and its
-modification time is updated after every successful backup. However,
-you can force a full backup by just providing the option `-f`.
+modification time of the last backup performed; i.e. only files
+modified after the latest backup detected will be included into the
+backup archive. However, you can force a full backup by just providing
+the option `-f`.
 
 ### Usage examples
 
@@ -61,10 +61,9 @@ you can force a full backup by just providing the option `-f`.
 $ bak -s1024 user@remote:backups/`hostname -s`
 ```
 
-If there is a previous backup (i.e. there is a `.bak` file in the
-current directory) the next backup will ignore any files older than
-the *lastfile* `.bak`. You must use the option `-f` to force a full
-backup, as shown in the next example.
+If a previous backup is detected, an incremental backup will
+occur. You must use the option `-f` to force a full backup, if
+desired, as shown in the next example.
 
 **Force full backups and use a specific recipient encryption key:**
 
@@ -77,6 +76,14 @@ If you don't have the options `default-recipient-self` and
 prevent GnuPG from asking you for the recipient key for
 encryption. However, if the option `-k` is not used the default key to
 sign with is the first key found in the secret keyring.
+
+**Backup multiple directories to multiple destinations:**
+
+```sh
+$ for dir in /etc /root $HOME; do
+>     cd $dir && bak /var/backups/$dir /media/usb0/backups/`hostname -s`/$dir
+> done
+```
 
 #### Other options
 
@@ -171,9 +178,8 @@ BAK_DEST="user@remote:bak/"
 # Known issues
 
 - It is recommended that you do full backups (`-f`) if you have
-  changed your `.bakignore` file. Bak won't include a removed or
-  modified pattern from this file that was changed before *lastfile*
-  (`.bak`) in the next incremental backup. A similar issue will occur
-  when using the option `-s`.
+  changed your `.bakignore` file. Bak may not include in next
+  incremental backups files related to removed or modified ignore file
+  patterns. A similar issue will occur when using the option `-s`.
 
 - dry run (`-n`) option is not implemented yet.

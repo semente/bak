@@ -74,10 +74,10 @@ function PrintHelp() {
     echo "Creates a backup of the current directory to one or more DEST in local"
     echo "or remote hosts."
     echo
-    echo "If there is a previous backup (i.e. there is a \`.bak' in the current"
-    echo "directory) the next backup will ignore any files older than the"
-    echo "\"lastfile\" \`.bak'. You must use the option \`-f' to force a full"
-    echo "backup, if desired."
+    echo "If a previous backup is detected, an incremental backup will occur."
+    echo "i.e. only files modified after the last backup will be included into the"
+    echo "backup archive. You must use the option \`-f' to force a full backup,"
+    echo "if desired."
     echo
     echo " Examples:"
     echo
