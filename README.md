@@ -175,6 +175,20 @@ BAK_DEST="user@remote:bak/"
 # runs at 2AM every day
 0    2    *   *   *     cd ~ && bak -s1024 $BAK_ARGS $BAK_DEST
 ```
+
+# Testing
+
+Bak use the command line tester tool
+[clitest](https://github.com/aureliojargas/clitest) to perform
+automatic testing.
+
+Once `clitest` is installed in your system, just run following
+commmand:
+
+```sh
+$ clitest test.txt
+```
+
 # Known issues
 
 - It is recommended that you do full backups (`-f`) if you have
