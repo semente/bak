@@ -52,8 +52,6 @@ AUTHOR="Guilherme Gondim <https://semente.io>"
 DESTS=()
 FORCE_FULL=0
 VERBOSE=0
-LASTFILE=".${NAME}"
-
 
 function PrintVersion() {
     echo "$NAME version $VERSION"
@@ -88,7 +86,7 @@ function PrintHelp() {
     echo
     echo " Options:"
     echo
-    echo "  -f                      force a full backup (i.e. ignore lastfile .bak)"
+    echo "  -f                      force a full backup"
     echo "  -r RECIPIENT-KEY        encrypt for user id RECIPIENT-KEY"
     echo "  -k SIGN-KEY             use SIGN-KEY as the key to sign with"
     echo "  -s SIZE                 don't backup any file larger than SIZE kbytes"
@@ -136,7 +134,7 @@ function ParseCommandLine() {
     while getopts fuvdnVhr:k:s:i: option; do
         case $option in
             f)
-                rm -f "$LASTFILE"
+                FORCE_FULL=1
                 ;;
             u)
                 GPG_ARGS+=(--batch --no-tty)
@@ -213,57 +211,56 @@ function ParseCommandLine() {
 }
 
 function Backup() {
+    local dest=$1
+    local hash=`echo "$dest" | sha1sum | cut -c -8`
+    local lastfile=".${NAME}.${hash}"
+
     local baktype
-    [ -f "$LASTFILE" ] && baktype=incr || baktype=full
+    [ $FORCE_FULL = 1 ] && rm -f "$lastfile"
+    [ -f "$lastfile" ] && baktype=incr || baktype=full
 
-    # Use `$LASTFILE' as reference for the incremental backup
-    [ $baktype = incr ] && FIND_ARGS+=(-newer "$LASTFILE")
-
-    # determine where the backup file is temporarily stored before sent to DEST
-    local bakfile="`mktemp --suffix=-bak -d`/`date --utc --iso-8601=s`.${baktype}.tar.gz.gpg"
+    # Determine where the backup file is temporarily stored before sent to `$dest'
+    local bakdate="`date --utc --iso-8601=s`"
+    local bakfile="`mktemp --suffix=-bak -d`/${bakdate}.${baktype}.tar.gz.gpg"
     trap "rm -f $bakfile && rmdir `dirname $bakfile`" EXIT
 
+    # Use `$lastfile' as reference for the incremental backup
+    [ $baktype = incr ] && local local_find_args=(-newer "$lastfile")
+
     # Make a list of files to backup that size is less than `$SIZE'
-    # (if set) and newer than `$LASTFILE' (if present); then create a
+    # (if set) and newer than `$lastfile' (if present); then create a
     # PGP encrypted tar.gz archive.
-    find -type f "${FIND_ARGS[@]}" -print0 |
+    find "${FIND_ARGS[@]}" "${local_find_args[@]}" -type f -print0 |
         tar "${TAR_ARGS[@]}" \
-            --exclude="$LASTFILE" \
+            --exclude="$lastfile" \
             --null \
             --files-from - \
             -cz |
         gpg "${GPG_ARGS[@]}" \
             --output "$bakfile"
 
-    # send `$bakfile' to DEST using rsync
-    set +e
-    local dest
-    for dest in "${DESTS[@]}"; do
-        rsync "${RSYNC_ARGS[@]}" "$bakfile" "${dest}/"
-        if [ $? -gt 0 ]; then
-            FAILED=1
-            Warn "Failed to send backtup to $dest"
-        else
-            Log "Sending backup of `pwd` to $dest succeeded"
-        fi
-    done
-    set -e
+    # send backup to destination using rsync
+    rsync "${RSYNC_ARGS[@]}" "$bakfile" "${dest}/"
+    if [ $? -gt 0 ]; then
+        Warn "Failed to send backtup to $dest"
+    else
+        Log "Sending backup of `pwd` to $dest succeeded"
 
-    # update last modification time of `$LASTFILE' if backup succeeded
-    #
-    # XXX: When sending backups to multiple destinations, `.bak' last
-    #      modification time won't be updated if rsync failed for at
-    #      least one destination.
-    #
-    [ -z $FAILED ] && touch "$LASTFILE"
-
+        # update last modification time of `$lastfile' if backup succeeded
+        touch -d "${bakdate}" "$lastfile"
+    fi
 }
 
 function Main() {
-    umask 077
     ParseCommandLine "$@"
+
+    umask 077
     trap 'Warn "An unknown error occurred while backing up `pwd`. Aborted"' EXIT
-    Backup
+
+    local dest
+    for dest in "${DESTS[@]}"; do
+        Backup "$dest"
+    done
 }
 
 Main "$@"

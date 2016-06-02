@@ -81,7 +81,7 @@ sign with is the first key found in the secret keyring.
 #### Other options
 
 ```
-  -f                      force a full backup (i.e. ignore lastfile .bak)
+  -f                      force a full backup
   -r RECIPIENT-KEY        encrypt for user id RECIPIENT-KEY
   -k SIGN-KEY             use SIGN-KEY as the key to sign with
   -s SIZE                 don't backup any file larger than SIZE kbytes
@@ -175,11 +175,5 @@ BAK_DEST="user@remote:bak/"
   modified pattern from this file that was changed before *lastfile*
   (`.bak`) in the next incremental backup. A similar issue will occur
   when using the option `-s`.
-
-- When sending backups to multiple destinations, *lastfile*'s (`.bak`)
-  last modification time won't be updated if Bak failed for at least
-  one destination. It means that the next incremental backup will have
-  duplicates files in the destinations that were updated
-  successfully. It is not a big deal.
 
 - dry run (`-n`) option is not implemented yet.
