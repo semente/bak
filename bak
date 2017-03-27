@@ -94,7 +94,7 @@ function PrintHelp() {
     echo "  -u                      non interactive-commonly used for unattended operations"
     echo "  -v                      verbose (i.e. give more information during processing)"
     echo "  -d                      print commands as they are executed (for debug)"
-    echo "  -n                      read commands but do not execute them (dry run)"
+    # echo "  -n                      read commands but do not execute them (dry run)"
     echo "  -V                      print version number"
     echo "  -h                      show this help text"
     echo
@@ -246,7 +246,7 @@ function Backup() {
     else
         Log "Sending backup of `pwd` to $dest succeeded"
 
-        # update last modification time of `$lastfile' if backup succeeded
+        # Update last modification time of `$lastfile' if backup succeeded
         touch -d "${bakdate}" "$lastfile"
     fi
 }

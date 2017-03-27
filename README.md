@@ -14,12 +14,6 @@ GNU/Linux.
 It is also required that you have a PGP key configured **and know how
 to handle GnuPG**.
 
-The initial version of this tool was written in less than an hour and
-I kept it very simple. I do not intend to add more features or let the
-code become bloated, but any good ideas are very welcomed. Use the
-link https://github.com/semente/bak/issues to suggest any changes.
-
-
 ## Usage
 
 To run `bak` you must have the following software installed on your
@@ -68,7 +62,7 @@ desired, as shown in the next example.
 **Force full backups and use a specific recipient encryption key:**
 
 ```sh
-$ bak -f -rABCD1234 bak /in/black
+$ bak -f -rABCD1234 /in/black
 ```
 
 If you don't have the options `default-recipient-self` and
@@ -96,7 +90,6 @@ $ for dir in /etc /root $HOME; do
   -u                      non interactive-commonly used for unattended operations
   -v                      verbose (i.e. give more information during processing)
   -d                      print commands as they are executed (for debug)
-  -n                      read commands but do not execute them (dry run)
   -V                      print version number
   -h                      show this help text
 ```
@@ -117,6 +110,7 @@ An example of what could be a `~/.bakignore` file:
 
 ```sh
 *~
+*.mp3
 */.git
 */.tox
 ./.cache
@@ -195,5 +189,3 @@ $ clitest test.txt
   changed your `.bakignore` file. Bak may not include in next
   incremental backups files related to removed or modified ignore file
   patterns. A similar issue will occur when using the option `-s`.
-
-- dry run (`-n`) option is not implemented yet.
