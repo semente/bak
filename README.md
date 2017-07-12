@@ -74,7 +74,8 @@ sign with is the first key found in the secret keyring.
 **Backup multiple directories to multiple destinations:**
 
 ```sh
-$ for dir in /etc /root $HOME; do
+$ for dir in /etc /root $HOME
+> do
 >     cd $dir && bak /var/backups/$dir /media/usb0/backups/`hostname -s`/$dir
 > done
 ```
@@ -126,18 +127,11 @@ the directory `.local` from the root of the backup source I had to use
 
 ## Scheduled and unattended backups
 
-I currently do not have any scheduled backups on my laptop, I have a
-script that reminds me from time to time to backup, allowing me to
-decide if it is a good time for a backup and what options I should
-use.
-
-However, you might want to schedule your backups by using *cron* or
-other tool.
-
-Once Bak **always signs** the resulting backup archive it will prompt
-you for the PGP secret key password if your it is protected by one,
-and it may be an inconvenient for unattended backups. I chose to not
-support unsigned backups for security reasons. So, for unattended
+You might want to schedule your backups by using *cron* or other
+tool. Once Bak **always signs** the resulting backup archive it will
+prompt you for the PGP secret key password if your it is protected by
+one, and it may be an inconvenient for unattended backups. I chose to
+not support unsigned backups for security reasons. So, for unattended
 operations, it is recommended that the PGP key used for sign (option
 `-k`) is not protected by a password&mdash;you can still select a
 password-protected key for encryption with the option `-r`.
